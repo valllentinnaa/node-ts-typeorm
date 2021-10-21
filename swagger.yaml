@@ -1,0 +1,251 @@
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          properties:
+            id:
+              type: number
+            email:
+              type: string
+            password:
+              type: string
+    ResetPasswordResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        password:
+          type: string
+    SuccessResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          description: Status message
+    Error:
+      type: object
+      properties:
+        status:
+          type:
+            - string
+            - integer
+        message:
+          type: string
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      requestBody:
+        description: Login*
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+              example:
+                email: example@example.com
+                password: '12345'
+      responses:
+        '200':
+          description: |-
+            Successful login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                example:
+                  value:
+                    {
+                      'user': { id: 5, name: 'John Smith', email: 'johnsmith@gmail.com' },
+                      'token': '23534nsdjfy4hgkjey5wrhw',
+                    }
+        '404':
+          description: |-
+            Not existing user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example:
+                  value: { status: 404, message: 'User with this email does not exists!' }
+        '400':
+          description: |-
+            Wrong Password
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example:
+                  value: { status: 404, message: 'Wrong password' }
+  /auth/register:
+    post:
+      tags:
+        - Auth
+      requestBody:
+        description: Register
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                email: example@example.com
+                password: '12345'
+                name: 'Example'
+      responses:
+        '201':
+          description: |-
+            Successful Register
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+              examples:
+                example:
+                  value:
+                    {
+                      'user': { id: 5, name: 'John Smith', email: 'johnsmith@gmail.com' },
+                      'token': '23534nsdjfy4hgkjey5wrhw',
+                    }
+        '400':
+          description: |-
+            Existing Email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example:
+                  value: { status: 400, message: 'User with this email already exist' }
+  /auth/forgot-password:
+    post:
+      # security:
+      #   - bearerAuth: []
+      tags:
+        - Auth
+      requestBody:
+        description: Forgot Password
+        required: true
+        content:
+          application/json:
+            schema:
+              example:
+                email: example@example.com
+      responses:
+        # "200":
+        #   description: |-
+        #     New password sent
+        #   content:
+        #     application/json:
+        #       schema:
+        #         $ref: '#/components/schemas/LoginResponse'
+        #       examples:
+        #         example:
+        #           value: {
+        #             "user": {
+        #               id: 5,
+        #               name: 'John Smith',
+        #               email: 'johnsmith@gmail.com'
+        #             },
+        #             "token": "23534nsdjfy4hgkjey5wrhw"
+        #           }
+        '400':
+          description: |-
+            Error Sending Email
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example:
+                  value: { status: 400, message: 'Error sending email' }
+  /auth/reset-password:
+    post:
+      tags:
+        - Auth
+      requestBody:
+        description: Reset Password
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                token:
+                  type: string
+                password:
+                  type: string
+                required:
+                  - token
+                  - password
+            examples:
+              example:
+                value: { token: '9u8sfhfsf90e1ej1ehe', password: '1234' }
+      responses:
+        '200':
+          description: |-
+            Successful Register
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example:
+                  value: { status: 'success', message: 'Password updated successfully!' }
+        '400':
+          description: |-
+            Invalid or expired token!
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                example:
+                  value: { status: 400, message: 'Invalid or expired token' }
+  /users:
+    get:
+      tags:
+        - User
+      summary: Get all users
+
+  /users/{userId}:
+    get:
+      tags:
+        - User
+      summary: Get a user by ID
+      parameters:
+        - in: path
+          name: userId
+          schema:
+            type: integer
+          required: true
+          description: Numeric ID of the user to get
+      # security:
+      #   - bearerAuth: []
